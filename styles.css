@@ -7,18 +7,79 @@ body {
 }
 
 .section-game {
+  display: grid;
+
   height: 100vh;
   width: 100vw;
-  padding: 50px;
 }
 
-.plane{
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.plane-container {
+  grid-column: 1/-1;
+  grid-row: 2;
+  display: grid;
+  place-items: center;
+}
+
+.plane {
+  display: grid;
+  /* grid-template-columns: repeat(3, 1fr); */
+  place-items: center;
 }
 
 .tile {
-  height: 200px;
-  width: 200px;
-  background-color: blue;
+  /* height: 200px;
+  width: 200px; */
+  background-color: rgb(255, 255, 255);
+  border: 1px solid rgb(112, 112, 112);
+  box-sizing: border-box;
+}
+
+.visible {
+  background-color: yellow;
+}
+
+.shadow {
+  background-color: rgb(74, 74, 74);
+}
+
+.light-mouse {
+  background-color: yellow;
+}
+
+.wall-mouse {
+  background-color: brown;
+}
+
+.controls-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  place-items: center;
+  grid-column: 1/-1;
+  grid-row: 1;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  height: 150px;
+}
+
+.button {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  background-color: rgb(255, 255, 255);
+  border: 2px rgb(121, 121, 121) outset;
+}
+
+.button:active,
+.clicked {
+  background-color: yellow;
+  border: 2px rgb(121, 121, 121) inset;
+}
+
+.icon {
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background-color: aqua;
 }

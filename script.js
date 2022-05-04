@@ -1,82 +1,72 @@
-const plane = document.querySelector(".plane");
+// const plane = document.querySelector(".plane");
 
-let tilesArray = [];
-let tileSize = 200;
+// let tilesArray = [];
 
-for (i = 0; i < 3; i++) {
-  tilesArray.push({
-    id: i,
+// let rowsCount = 1;
+// let colsCount = 1;
 
-    cornerTopL: { x: null, y: null },
-    cornerTopR: { x: null, y: null },
-    cornerBotL: { x: null, y: null },
-    cornerBotR: { x: null, y: null },
-    coordsCenter: { x: null, y: null },
+class Tile {
+  constructor(id) {
+    this.id = id;
 
-    vectorU: { x: null, y: null },
-    vectorV: { x: null, y: null },
+    this.cornerTopL = { x: null, y: null };
+    this.cornerTopR = { x: null, y: null };
+    this.cornerBotL = { x: null, y: null };
+    this.cornerBotR = { x: null, y: null };
+    this.coordsCenter = { x: null, y: null };
 
-    visible: true,
-    opacity: null,
+    this.vectorU = { x: null, y: null };
+    this.vectorV = { x: null, y: null };
 
-    player: false,
-    wall: false,
-  });
-}
+    this.visible = true;
+    this.opacity = null;
 
-let tilePlayer = tilesArray[0];
+    this.player = false;
+    this.wall = false;
+  }
 
-function displayTiles() {
-  const preparedTiles = tilesArray.map((tile) => {
-    return `<div class="tile" data-id="${tile.id}"></div>`;
-  });
-
-  plane.innerHTML = preparedTiles.join("");
-}
-
-function getOwnCoords() {
-  tilesArray.forEach((tile) => {
+  getOwnCoords() {
     let tileRect = document
-      .querySelector(`[data-id="${tile.id}"]`)
+      .querySelector(`[data-id="${this.id}"]`)
       .getBoundingClientRect();
 
-    tile.cornerTopL = { x: tileRect.left, y: tileRect.top };
-    tile.cornerTopR = { x: tileRect.right, y: tileRect.top };
-    tile.cornerBotL = { x: tileRect.left, y: tileRect.bottom };
-    tile.cornerBotR = { x: tileRect.right, y: tileRect.bottom };
-    tile.coordsCenter = {
+    this.cornerTopL = { x: tileRect.left, y: tileRect.top };
+    this.cornerTopR = { x: tileRect.right, y: tileRect.top };
+    this.cornerBotL = { x: tileRect.left, y: tileRect.bottom };
+    this.cornerBotR = { x: tileRect.right, y: tileRect.bottom };
+    this.coordsCenter = {
       x: tileRect.left + tileRect.width / 2,
       y: tileRect.top + tileRect.height / 2,
     };
-  });
-}
+  }
 
-function getVisibleBorderVectors(tile) {
-  let vectorCorners = getVectorCorners();
+  getVisibleBorderVectors() {
+    let vectorCorners = this.getVectorCorners();
 
-  tile.vectorU = {
-    x: vectorCorners[0].x - tilePlayer.coordsCenter.x,
-    y: vectorCorners[0].y - tilePlayer.coordsCenter.y,
-  };
+    this.vectorU = {
+      x: vectorCorners[0].x - tilePlayer.coordsCenter.x,
+      y: vectorCorners[0].y - tilePlayer.coordsCenter.y,
+    };
 
-  tile.vectorV = {
-    x: vectorCorners[1].x - tilePlayer.coordsCenter.x,
-    y: vectorCorners[1].y - tilePlayer.coordsCenter.y,
-  };
+    this.vectorV = {
+      x: vectorCorners[1].x - tilePlayer.coordsCenter.x,
+      y: vectorCorners[1].y - tilePlayer.coordsCenter.y,
+    };
+  }
 
-  function getVectorCorners() {
+  getVectorCorners() {
     let tileCorners = [
-      tile.cornerTopL,
-      tile.cornerTopR,
-      tile.cornerBotL,
-      tile.cornerBotR,
+      this.cornerTopL,
+      this.cornerTopR,
+      this.cornerBotL,
+      this.cornerBotR,
     ];
 
     tileCorners = tileCorners.map((corner) => {
       return {
         x: corner.x,
         y: corner.y,
-        distanceSquare: distanceSquare(corner, tilePlayer.coordsCenter),
+        distanceSquare: this.distanceSquare(corner, tilePlayer.coordsCenter),
       };
     });
 
@@ -91,45 +81,150 @@ function getVisibleBorderVectors(tile) {
 
     return vectorCorners;
   }
-}
 
-function distanceSquare(a, b) {
-  return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
-}
+  decideTileVisible(tileWall) {
+    let tileCenterVector = {
+      x: this.coordsCenter.x - tilePlayer.coordsCenter.x,
+      y: this.coordsCenter.y - tilePlayer.coordsCenter.y,
+    };
+    let wallVisionAngle = this.angle(tileWall.vectorU, tileWall.vectorV);
+    let tileCenterAngle = this.angle(tileWall.vectorU, tileCenterVector);
 
-function crossProduct(u, v) {
-  return u.x * v.y - u.y * v.x;
-}
+    if (
+      (this.crossProduct(tileWall.vectorU, tileWall.vectorV) > 0 &&
+        tileCenterAngle > 0 &&
+        tileCenterAngle < wallVisionAngle) ||
+      (this.crossProduct(tileWall.vectorU, tileWall.vectorV) < 0 &&
+        tileCenterAngle < 0 &&
+        tileCenterAngle > wallVisionAngle)
+    ) {
+      this.visible = false;
+    }
+  }
 
-function dotProduct(u, v) {
-  return u.x * v.x + u.y * v.y;
-}
+  distanceSquare(a, b) {
+    return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+  }
 
-function angle(u, v) {
-  Math.atan2(Math.abs(crossProduct(u, v)), dotProduct(u, v));
-}
+  crossProduct(u, v) {
+    return u.x * v.y - u.y * v.x;
+  }
 
-function decideTileVisible(tile, tileWall) {
-  let tileCenterVector = {
-    x: tile.coordsCenter.x - tilePlayer.coordsCenter.x,
-    y: tile.coordsCenter.y - tilePlayer.coordsCenter.y,
-  };
-  let wallVisionAngle = angle(tileWall.vectorU, tileWall.vectorV);
-  let tileCenterAngle = angle(tileWall.vectorU, tileCenterVector);
+  dotProduct(u, v) {
+    return u.x * v.x + u.y * v.y;
+  }
 
-  if (
-    (crossProduct(tileWall.vectorU, tileWall.vectorV) > 0 &&
-      tileCenterAngle > 0 &&
-      tileCenterAngle < wallVisionAngle) ||
-    (crossProduct(tileWall.vectorU, tileWall.vectorV) < 0 &&
-      tileCenterAngle < 0 &&
-      tileCenterAngle > wallVisionAngle)
-  ) {
-    tile.visible = false;
+  angle(u, v) {
+    return Math.atan2(Math.abs(this.crossProduct(u, v)), this.dotProduct(u, v));
   }
 }
 
-displayTiles();
-getOwnCoords();
-getVisibleBorderVectors(tilesArray[1]);
-angle(tilesArray[1].vectorU, tilesArray[1].vectorV);
+class Gameboard {
+  constructor(rows, height) {
+    this.rowsCount = rows;
+    this.colsCount = 2 * rows;
+    this.height = height;
+    this.width = 2 * height;
+
+    this.tilesArray = [];
+    this.tilePlayer = null;
+  }
+
+  generateTiles() {
+    for (let i = 0; i < this.rowsCount * this.colsCount; i++) {
+      this.tilesArray.push(new Tile(i));
+    }
+  }
+
+  displayTiles() {
+    const plane = document.querySelector(".plane");
+    const preparedTiles = this.tilesArray.map((tile) => {
+      return `<div class="tile" data-id="${tile.id}"></div>`;
+    });
+
+    plane.style.gridTemplateColumns = `repeat(${this.colsCount}, 1fr)`;
+    plane.innerHTML = preparedTiles.join("");
+
+    if (window.matchMedia("(max-height: 500px)").matches) {
+      this.height = 350;
+      this.width = 2 * this.height;
+    }
+
+    document.querySelectorAll(".tile").forEach((tile) => {
+      tile.style.height = `${this.height / this.rowsCount}px`;
+      tile.style.width = `${this.width / this.colsCount}px`;
+    });
+
+    this.tilesArray.forEach((tile) => {
+      tile.getOwnCoords();
+    });
+  }
+
+  gameboardAddListeners() {
+    const buttons = document.querySelectorAll(".button");
+    const icons = document.querySelectorAll(".icon");
+    const tiles = document.querySelectorAll(".tile");
+
+    let buttonPressed;
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.currentTarget.classList.toggle("clicked");
+        // e.currentTarget.firstElementChild.classList.toggle("move");
+        console.log(e.target);
+      });
+    });
+
+    // window.addEventListener("mousemove", (e) => {
+    //   icons.forEach((icon) => {
+    //     if (icon.classList.contains("move")) {
+    //       icon.style.position = "absolute";
+    //       icon.style.left = `${e.clientX}px`;
+    //       icon.style.top = `${e.clientY}px`;
+    //       icon.style.transform = "translate(-50%, -50%)";
+    //       icon.style.cursor = "grab";
+    //     } else {
+    //       icon.style.position = "initial";
+    //       icon.style.left = "initial";
+    //       icon.style.top = "initial";
+    //       icon.style.transform = "initial";
+    //       icon.style.cursor = "initial";
+    //     }
+    //   });
+    // });
+
+    tiles.forEach((tile) => {
+      tile.addEventListener("mouseover", (e) => {
+        tiles.forEach((t) => {
+          t.classList.remove("wall-mouse");
+          t.classList.remove("light-mouse");
+        });
+
+        const buttonActive = document.querySelector(".clicked");
+        if (buttonActive) {
+          e.target.classList.add(`${buttonActive.dataset.id}-mouse`);
+        }
+        console.log(e.target);
+      });
+    });
+  }
+}
+
+const gameboard = new Gameboard(2, 400);
+
+gameboard.generateTiles();
+gameboard.tilePlayer = gameboard.tilesArray[0];
+gameboard.displayTiles();
+gameboard.gameboardAddListeners();
+
+// generateTiles(1, 3);
+// let tilePlayer = tilesArray[0];
+
+// displayTiles();
+// tilesArray.forEach((tile) => {
+//   tile.getOwnCoords();
+//   tile.getVisibleBorderVectors();
+//   tile.decideTileVisible(tilesArray[1]);
+// });
+
+console.log(gameboard.tilesArray);
