@@ -6,6 +6,14 @@ body {
   padding: 0px;
 }
 
+body.cursor-light {
+  cursor: url("./images/lightbulb-cursor.png"), auto;
+}
+
+body.cursor-wall {
+  cursor: url("./images/wall-cursor.png"), auto;
+}
+
 .section-game {
   display: grid;
 
@@ -42,17 +50,29 @@ body {
   background-color: rgb(74, 74, 74);
 }
 
+.tile-light {
+  background-image: url("./images/lightbulb.png");
+  background-size: cover;
+}
+
+.tile-wall {
+  background-image: url("./images/wall.png");
+  background-size: cover;
+}
+
 .light-mouse {
-  background-color: yellow;
+  background-image: url("./images/lightbulb.png");
+  background-size: cover;
 }
 
 .wall-mouse {
-  background-color: brown;
+  background-image: url("./images/wall.png");
+  background-size: cover;
 }
 
 .controls-container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   place-items: center;
   grid-column: 1/-1;
   grid-row: 1;
@@ -65,8 +85,8 @@ body {
 .button {
   display: grid;
   place-items: center;
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   background-color: rgb(255, 255, 255);
   border: 2px rgb(121, 121, 121) outset;
 }
@@ -80,6 +100,20 @@ body {
 .icon {
   height: 30px;
   width: 30px;
-  border-radius: 50%;
-  background-color: aqua;
+
+  /* background-color: aqua; */
+
+  background-size: cover;
+}
+
+.icon-light {
+  background-image: url("./images/lightbulb.png");
+}
+
+.icon-wall {
+  background-image: url("./images/wall.png");
+}
+
+.icon-clear {
+  background-image: url("./images/clear.png");
 }

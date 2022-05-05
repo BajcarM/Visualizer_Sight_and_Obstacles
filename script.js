@@ -21,7 +21,7 @@ class Tile {
     this.visible = true;
     this.opacity = null;
 
-    this.player = false;
+    this.light = false;
     this.wall = false;
   }
 
@@ -139,7 +139,7 @@ class Gameboard {
   displayTiles() {
     const plane = document.querySelector(".plane");
     const preparedTiles = this.tilesArray.map((tile) => {
-      return `<div class="tile" data-id="${tile.id}"></div>`;
+      return `<div class="tile empty" data-id="${tile.id}"></div>`;
     });
 
     plane.style.gridTemplateColumns = `repeat(${this.colsCount}, 1fr)`;
@@ -162,49 +162,100 @@ class Gameboard {
 
   gameboardAddListeners() {
     const buttons = document.querySelectorAll(".button");
-    const icons = document.querySelectorAll(".icon");
     const tiles = document.querySelectorAll(".tile");
+    const body = document.querySelector("body");
 
-    let buttonPressed;
+    function removeClickedFromAll() {
+      buttons.forEach((button) => {
+        button.classList.remove("clicked");
+      });
+      body.className = "";
+      tiles.forEach((t) => {
+        t.classList.remove("wall-mouse");
+        t.classList.remove("light-mouse");
+      });
+    }
 
     buttons.forEach((button) => {
       button.addEventListener("click", (e) => {
-        e.currentTarget.classList.toggle("clicked");
-        // e.currentTarget.firstElementChild.classList.toggle("move");
+        if (e.currentTarget.dataset.id === "clear") {
+          removeClickedFromAll();
+          tiles.forEach((tile) => {
+            tile.className = "tile empty";
+          });
+          this.tilesArray.forEach((tile) => {
+            tile.visible = true;
+            tile.opacity = null;
+            tile.light = false;
+            tile.wall = false;
+          });
+        } else if (e.currentTarget.classList.contains("clicked")) {
+          removeClickedFromAll();
+        } else {
+          removeClickedFromAll();
+          e.currentTarget.classList.add("clicked");
+          body.classList.add(`cursor-${e.currentTarget.dataset.id}`);
+        }
+
         console.log(e.target);
       });
     });
 
-    // window.addEventListener("mousemove", (e) => {
-    //   icons.forEach((icon) => {
-    //     if (icon.classList.contains("move")) {
-    //       icon.style.position = "absolute";
-    //       icon.style.left = `${e.clientX}px`;
-    //       icon.style.top = `${e.clientY}px`;
-    //       icon.style.transform = "translate(-50%, -50%)";
-    //       icon.style.cursor = "grab";
-    //     } else {
-    //       icon.style.position = "initial";
-    //       icon.style.left = "initial";
-    //       icon.style.top = "initial";
-    //       icon.style.transform = "initial";
-    //       icon.style.cursor = "initial";
-    //     }
-    //   });
-    // });
-
     tiles.forEach((tile) => {
       tile.addEventListener("mouseover", (e) => {
-        tiles.forEach((t) => {
-          t.classList.remove("wall-mouse");
-          t.classList.remove("light-mouse");
-        });
-
         const buttonActive = document.querySelector(".clicked");
-        if (buttonActive) {
+        if (e.target.classList.contains("empty") && buttonActive) {
+          tiles.forEach((t) => {
+            t.classList.remove("wall-mouse");
+            t.classList.remove("light-mouse");
+          });
           e.target.classList.add(`${buttonActive.dataset.id}-mouse`);
         }
-        console.log(e.target);
+      });
+
+      tile.addEventListener("click", (e) => {
+        const buttonActive = document.querySelector(".clicked");
+        const tileSelected = this.tilesArray[e.target.dataset.id];
+        const tileLight = document.querySelector(".tile-light");
+
+        if (!buttonActive) {
+          return;
+        }
+        if (
+          e.target.classList.contains("empty") &&
+          buttonActive.dataset.id === "wall"
+        ) {
+          e.target.classList.remove("empty");
+          e.target.classList.add("tile-wall");
+
+          tileSelected.wall = true;
+          tileSelected.visible = false;
+        }
+        if (
+          e.target.classList.contains("empty") &&
+          buttonActive.dataset.id === "light"
+        ) {
+          if (tileLight) {
+            tileLight.classList.remove("tile-light");
+            tileLight.classList.add("empty");
+
+            this.tilesArray[tileLight.dataset.id].light = false;
+          }
+
+          e.target.classList.remove("empty");
+          e.target.classList.add("tile-light");
+
+          this.tilesArray[e.target.dataset.id].light = true;
+
+          let tilesWall = this.tilesArray.filter((tile)=>{
+              return tile.wall===true;
+          })
+          tilesWall.forEach(tile=>{
+              tile.getVisibleBorderVectors()
+          })
+          
+          console.log(tilesWall);
+        }
       });
     });
   }
