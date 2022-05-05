@@ -93,7 +93,10 @@ class Tile {
     ) {
       this.visible = false;
     }
+    
   }
+
+  
 
   distanceSquare(a, b) {
     return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
@@ -204,10 +207,12 @@ class ControlPanel {
   constructor(targetGameboard) {
     this.targetGameboard = targetGameboard;
 
-    this.buttons = ["light", "wall", "clear"];
+    this.buttons = ["light", "wall", "smooth", "clear"];
+    
   }
 
   displayControls() {
+    const controlsContainer = document.querySelector(".controls-container");
     const buttonsHTML = this.buttons.map((button) => {
       return `
             <button type="button" class="button button-${button}" data-id="${button}">
@@ -216,8 +221,8 @@ class ControlPanel {
             </button>
           `;
     });
-    document.querySelector(".controls-container").innerHTML =
-      buttonsHTML.join("");
+    controlsContainer.style.gridTemplateColumns = `repeat(${this.buttons.length}, 1fr)`;
+    controlsContainer.innerHTML = buttonsHTML.join("");
   }
 
   addClickListeners() {
@@ -249,6 +254,10 @@ class ControlPanel {
             tile.light = false;
             tile.wall = false;
           });
+        } else if (e.currentTarget.dataset.id === "smooth") {
+          // HERE GOES FUNCTION XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+          console.log("SMOOTH");
         } else if (e.currentTarget.classList.contains("clicked")) {
           removeClickedFromAll();
         } else {
@@ -411,7 +420,7 @@ class ControlPanel {
   }
 }
 
-const gameboard = new Gameboard(5, 500);
+const gameboard = new Gameboard(20, 500);
 const controlPanel = new ControlPanel(gameboard);
 
 gameboard.generateTiles();
