@@ -196,7 +196,6 @@ class Gameboard {
           tileShadow.classList.add("shadow");
         }
       });
-      console.log(tilesPotentialShadow);
     });
   }
 }
@@ -333,9 +332,15 @@ class ControlPanel {
 
   addMouseListeners() {
     const tiles = document.querySelectorAll(".tile");
+    const plane = document.querySelector(".plane");
+    const body = document.querySelector("body");
+    let mouseIsDown = false;
 
     tiles.forEach((tile) => {
       tile.addEventListener("mouseover", (e) => {
+        let tileLight = document.querySelector(".tile-light");
+        const tileSelected =
+          this.targetGameboard.tilesArray[e.target.dataset.id];
         const buttonActive = document.querySelector(".clicked");
 
         if (!buttonActive) {
@@ -347,8 +352,25 @@ class ControlPanel {
         ) {
           return;
         }
+
         if (e.target.classList.contains("empty")) {
           e.target.classList.add(`${buttonActive.dataset.id}-mouse`);
+        }
+
+        if (
+          e.target.classList.contains("empty") &&
+          mouseIsDown &&
+          buttonActive.dataset.id === "wall"
+        ) {
+          e.target.classList.remove("empty");
+          e.target.classList.remove("visible");
+          e.target.classList.add("tile-wall");
+
+          tileSelected.wall = true;
+
+          if (tileLight) {
+            this.targetGameboard.displayVisibleTiles(tileLight);
+          }
         }
       });
 
@@ -357,10 +379,39 @@ class ControlPanel {
         e.target.classList.remove("light-mouse");
       });
     });
+
+    plane.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      let tileLight = document.querySelector(".tile-light");
+      const tileSelected = this.targetGameboard.tilesArray[e.target.dataset.id];
+      const buttonActive = document.querySelector(".clicked");
+
+      mouseIsDown = true;
+
+      if (
+        e.target.classList.contains("empty") &&
+        buttonActive &&
+        buttonActive.dataset.id === "wall"
+      ) {
+        e.target.classList.remove("empty");
+        e.target.classList.remove("visible");
+        e.target.classList.add("tile-wall");
+
+        tileSelected.wall = true;
+
+        if (tileLight) {
+          this.targetGameboard.displayVisibleTiles(tileLight);
+        }
+      }
+    });
+
+    body.addEventListener("mouseup", () => {
+      mouseIsDown = false;
+    });
   }
 }
 
-const gameboard = new Gameboard(2, 400);
+const gameboard = new Gameboard(5, 500);
 const controlPanel = new ControlPanel(gameboard);
 
 gameboard.generateTiles();
