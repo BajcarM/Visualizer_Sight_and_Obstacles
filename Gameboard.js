@@ -77,8 +77,9 @@ export default class Gameboard {
 
       tilesPotentialShadow.forEach((tile) => {
         tile.decideTileVisible(this.tilesArray[tileLight.dataset.id], wall);
-        const tileShadow = document.querySelector(`[data-id="${tile.id}"]`);
+        
         if (tile.visible === false) {
+          const tileShadow = document.querySelector(`[data-id="${tile.id}"]`);
           tileShadow.classList.remove("visible");
           tileShadow.classList.add("shadow");
         }

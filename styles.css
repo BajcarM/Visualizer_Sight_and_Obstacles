@@ -48,10 +48,6 @@ body.cursor-wall {
   
 }
 
-.shadow {
-  /* background-color: rgb(69, 69, 0); */
-}
-
 .tile-light {
   background-image: url("./images/lightbulb.png");
   background-size: cover;
