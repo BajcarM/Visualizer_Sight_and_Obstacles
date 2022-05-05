@@ -420,7 +420,7 @@ class ControlPanel {
   }
 }
 
-const gameboard = new Gameboard(20, 500);
+const gameboard = new Gameboard(50, 700);
 const controlPanel = new ControlPanel(gameboard);
 
 gameboard.generateTiles();
