@@ -1,6 +1,7 @@
 class Tile {
-  constructor(id) {
+  constructor(id, colsCount) {
     this.id = id;
+    this.colsCount = colsCount;
 
     this.cornerTopL = { x: null, y: null };
     this.cornerTopR = { x: null, y: null };
@@ -93,10 +94,7 @@ class Tile {
     ) {
       this.visible = false;
     }
-    
   }
-
-  
 
   distanceSquare(a, b) {
     return (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
@@ -128,7 +126,7 @@ class Gameboard {
 
   generateTiles() {
     for (let i = 0; i < this.rowsCount * this.colsCount; i++) {
-      this.tilesArray.push(new Tile(i));
+      this.tilesArray.push(new Tile(i, this.colsCount));
     }
   }
 
@@ -158,6 +156,7 @@ class Gameboard {
 
   displayVisibleTiles(tileLight) {
     const tiles = document.querySelectorAll(".tile");
+
     this.tilesArray.forEach((tile) => {
       tile.visible = true;
     });
@@ -193,10 +192,33 @@ class Gameboard {
 
       tilesPotentialShadow.forEach((tile) => {
         tile.decideTileVisible(this.tilesArray[tileLight.dataset.id], wall);
+        const tileShadow = document.querySelector(`[data-id="${tile.id}"]`);
         if (tile.visible === false) {
-          const tileShadow = document.querySelector(`[data-id="${tile.id}"]`);
           tileShadow.classList.remove("visible");
           tileShadow.classList.add("shadow");
+        }
+
+        opacity(tile);
+        tileShadow.style.opacity = `${tile.opacity}%`;
+
+        function opacity(t) {
+          console.log(t.id);
+          let tilesAround = [
+            this.tilesArray[t.id - (this.colsCount + 1)],
+            this.tilesArray[t.id - this.colsCount],
+            this.tilesArray[t.id - (this.colsCount - 1)],
+            this.tilesArray[t.id - 1],
+            this.tilesArray[t.id + 1],
+            this.tilesArray[t.id + (this.colsCount - 1)],
+            this.tilesArray[t.id + this.colsCount],
+            this.tilesArray[t.id + (this.colsCount + 1)],
+          ];
+          return (t.opacity = tilesAround.reduce((acc, tile) => {
+            if (tile.visible) {
+              (acc += 12), 5;
+            }
+            return acc;
+          }, 0));
         }
       });
     });
@@ -208,7 +230,6 @@ class ControlPanel {
     this.targetGameboard = targetGameboard;
 
     this.buttons = ["light", "wall", "smooth", "clear"];
-    
   }
 
   displayControls() {
