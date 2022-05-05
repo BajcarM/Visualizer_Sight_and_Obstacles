@@ -19,6 +19,7 @@ body.cursor-wall {
 
   height: 100vh;
   width: 100vw;
+  background-color: rgb(52, 52, 52);
 }
 
 .plane-container {
@@ -37,19 +38,18 @@ body.cursor-wall {
 }
 
 .tile {
-  /* height: 200px;
-  width: 200px; */
-  background-color: rgb(255, 255, 255);
+  background-color: rgb(64, 64, 64);
   border: 1px solid rgb(112, 112, 112);
   box-sizing: border-box;
 }
 
 .visible {
   background-color: yellow;
+  
 }
 
 .shadow {
-  background-color: rgb(74, 74, 74);
+  /* background-color: rgb(69, 69, 0); */
 }
 
 .tile-light {
@@ -83,16 +83,16 @@ body.cursor-wall {
   left: 0px;
   right: 0px;
   height: 150px;
-  
 }
 
 .button {
   display: grid;
   place-items: center;
-  width: 70px;
-  height: 70px;
-  background-color: rgb(255, 255, 255);
+  width: 80px;
+  height: 80px;
+  background-color: rgb(190, 190, 190);
   border: 2px rgb(121, 121, 121) outset;
+  border-radius: 20px;
   cursor: pointer;
   text-transform: uppercase;
 }
@@ -104,8 +104,8 @@ body.cursor-wall {
 }
 
 .icon {
-  height: 30px;
-  width: 30px;
+  height: 40px;
+  width: 40px;
 
   /* background-color: aqua; */
 
