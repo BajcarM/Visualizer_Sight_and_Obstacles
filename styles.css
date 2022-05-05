@@ -53,6 +53,7 @@ body.cursor-wall {
 .tile-light {
   background-image: url("./images/lightbulb.png");
   background-size: cover;
+  cursor: grab;
 }
 
 .tile-wall {
@@ -80,6 +81,7 @@ body.cursor-wall {
   left: 0px;
   right: 0px;
   height: 150px;
+  
 }
 
 .button {
@@ -89,6 +91,8 @@ body.cursor-wall {
   height: 70px;
   background-color: rgb(255, 255, 255);
   border: 2px rgb(121, 121, 121) outset;
+  cursor: pointer;
+  text-transform: uppercase;
 }
 
 .button:active,

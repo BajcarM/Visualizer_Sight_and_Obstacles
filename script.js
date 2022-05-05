@@ -1,10 +1,3 @@
-// const plane = document.querySelector(".plane");
-
-// let tilesArray = [];
-
-// let rowsCount = 1;
-// let colsCount = 1;
-
 class Tile {
   constructor(id) {
     this.id = id;
@@ -30,31 +23,33 @@ class Tile {
       .querySelector(`[data-id="${this.id}"]`)
       .getBoundingClientRect();
 
-    this.cornerTopL = { x: tileRect.left, y: tileRect.top };
-    this.cornerTopR = { x: tileRect.right, y: tileRect.top };
-    this.cornerBotL = { x: tileRect.left, y: tileRect.bottom };
-    this.cornerBotR = { x: tileRect.right, y: tileRect.bottom };
+    //   ADDED + 1 PX TO CORNERS SO THEY OVERLAP A BIT AND YOU CANNOT SEE THROUGH CORNER CONNECTED TILES
+
+    this.cornerTopL = { x: tileRect.left - 1, y: tileRect.top - 1 };
+    this.cornerTopR = { x: tileRect.right + 1, y: tileRect.top - 1 };
+    this.cornerBotL = { x: tileRect.left - 1, y: tileRect.bottom + 1 };
+    this.cornerBotR = { x: tileRect.right + 1, y: tileRect.bottom + 1 };
     this.coordsCenter = {
       x: tileRect.left + tileRect.width / 2,
       y: tileRect.top + tileRect.height / 2,
     };
   }
 
-  getVisibleBorderVectors() {
-    let vectorCorners = this.getVectorCorners();
+  getVisibleBorderVectors(tileLight) {
+    let vectorCorners = this.getVectorCorners(tileLight);
 
     this.vectorU = {
-      x: vectorCorners[0].x - tilePlayer.coordsCenter.x,
-      y: vectorCorners[0].y - tilePlayer.coordsCenter.y,
+      x: vectorCorners[0].x - tileLight.coordsCenter.x,
+      y: vectorCorners[0].y - tileLight.coordsCenter.y,
     };
 
     this.vectorV = {
-      x: vectorCorners[1].x - tilePlayer.coordsCenter.x,
-      y: vectorCorners[1].y - tilePlayer.coordsCenter.y,
+      x: vectorCorners[1].x - tileLight.coordsCenter.x,
+      y: vectorCorners[1].y - tileLight.coordsCenter.y,
     };
   }
 
-  getVectorCorners() {
+  getVectorCorners(tile) {
     let tileCorners = [
       this.cornerTopL,
       this.cornerTopR,
@@ -66,7 +61,7 @@ class Tile {
       return {
         x: corner.x,
         y: corner.y,
-        distanceSquare: this.distanceSquare(corner, tilePlayer.coordsCenter),
+        distanceSquare: this.distanceSquare(corner, tile.coordsCenter),
       };
     });
 
@@ -82,21 +77,19 @@ class Tile {
     return vectorCorners;
   }
 
-  decideTileVisible(tileWall) {
+  decideTileVisible(tileLight, tileWall) {
     let tileCenterVector = {
-      x: this.coordsCenter.x - tilePlayer.coordsCenter.x,
-      y: this.coordsCenter.y - tilePlayer.coordsCenter.y,
+      x: this.coordsCenter.x - tileLight.coordsCenter.x,
+      y: this.coordsCenter.y - tileLight.coordsCenter.y,
     };
     let wallVisionAngle = this.angle(tileWall.vectorU, tileWall.vectorV);
     let tileCenterAngle = this.angle(tileWall.vectorU, tileCenterVector);
 
     if (
-      (this.crossProduct(tileWall.vectorU, tileWall.vectorV) > 0 &&
-        tileCenterAngle > 0 &&
-        tileCenterAngle < wallVisionAngle) ||
-      (this.crossProduct(tileWall.vectorU, tileWall.vectorV) < 0 &&
-        tileCenterAngle < 0 &&
-        tileCenterAngle > wallVisionAngle)
+      this.crossProduct(tileWall.vectorU, tileWall.vectorV) *
+        this.crossProduct(tileWall.vectorU, tileCenterVector) >
+        0 &&
+      tileCenterAngle < wallVisionAngle
     ) {
       this.visible = false;
     }
@@ -160,7 +153,75 @@ class Gameboard {
     });
   }
 
-  gameboardAddListeners() {
+  displayVisibleTiles(tileLight) {
+    const tiles = document.querySelectorAll(".tile");
+    this.tilesArray.forEach((tile) => {
+      tile.visible = true;
+    });
+
+    tiles.forEach((tile) => {
+      if (!tile.classList.contains("tile-wall")) {
+        tile.classList.add("visible");
+      }
+      tile.classList.remove("shadow");
+    });
+
+    const tilesWall = this.tilesArray.filter((tile) => {
+      return tile.wall === true;
+    });
+
+    tilesWall.forEach((wall) => {
+      wall.getVisibleBorderVectors(this.tilesArray[tileLight.dataset.id]);
+
+      const tilesPotentialShadow = this.tilesArray.filter((tile) => {
+        return (
+          tile.distanceSquare(
+            this.tilesArray[tileLight.dataset.id].coordsCenter,
+            tile.coordsCenter
+          ) >
+            tile.distanceSquare(
+              this.tilesArray[tileLight.dataset.id].coordsCenter,
+              wall.coordsCenter
+            ) &&
+          tile.visible === true &&
+          tile.wall === false
+        );
+      });
+
+      tilesPotentialShadow.forEach((tile) => {
+        tile.decideTileVisible(this.tilesArray[tileLight.dataset.id], wall);
+        if (tile.visible === false) {
+          const tileShadow = document.querySelector(`[data-id="${tile.id}"]`);
+          tileShadow.classList.remove("visible");
+          tileShadow.classList.add("shadow");
+        }
+      });
+      console.log(tilesPotentialShadow);
+    });
+  }
+}
+
+class ControlPanel {
+  constructor(targetGameboard) {
+    this.targetGameboard = targetGameboard;
+
+    this.buttons = ["light", "wall", "clear"];
+  }
+
+  displayControls() {
+    const buttonsHTML = this.buttons.map((button) => {
+      return `
+            <button type="button" class="button button-${button}" data-id="${button}">
+                <div class="icon icon-${button}" data-id="icon-${button}"></div>
+                ${button}
+            </button>
+          `;
+    });
+    document.querySelector(".controls-container").innerHTML =
+      buttonsHTML.join("");
+  }
+
+  addClickListeners() {
     const buttons = document.querySelectorAll(".button");
     const tiles = document.querySelectorAll(".tile");
     const body = document.querySelector("body");
@@ -183,7 +244,7 @@ class Gameboard {
           tiles.forEach((tile) => {
             tile.className = "tile empty";
           });
-          this.tilesArray.forEach((tile) => {
+          this.targetGameboard.tilesArray.forEach((tile) => {
             tile.visible = true;
             tile.opacity = null;
             tile.light = false;
@@ -196,41 +257,58 @@ class Gameboard {
           e.currentTarget.classList.add("clicked");
           body.classList.add(`cursor-${e.currentTarget.dataset.id}`);
         }
-
-        console.log(e.target);
       });
     });
 
     tiles.forEach((tile) => {
-      tile.addEventListener("mouseover", (e) => {
-        const buttonActive = document.querySelector(".clicked");
-        if (e.target.classList.contains("empty") && buttonActive) {
-          tiles.forEach((t) => {
-            t.classList.remove("wall-mouse");
-            t.classList.remove("light-mouse");
-          });
-          e.target.classList.add(`${buttonActive.dataset.id}-mouse`);
-        }
-      });
-
       tile.addEventListener("click", (e) => {
         const buttonActive = document.querySelector(".clicked");
-        const tileSelected = this.tilesArray[e.target.dataset.id];
-        const tileLight = document.querySelector(".tile-light");
+        const tileSelected =
+          this.targetGameboard.tilesArray[e.target.dataset.id];
+        const buttonLight = document.querySelector(".button-light");
+        let tileLight = document.querySelector(".tile-light");
+
+        if (
+          e.target.classList.contains("tile-light") &&
+          (!buttonActive || buttonLight.classList.contains("clicked"))
+        ) {
+          removeClickedFromAll();
+          buttonLight.classList.add("clicked");
+          body.classList.add(`cursor-${buttonLight.dataset.id}`);
+
+          tileSelected.light = false;
+
+          tileLight.classList.add("empty");
+          tileLight.classList.remove("tile-light");
+
+          tiles.forEach((tile) => {
+            if (!tile.classList.contains("tile-wall")) {
+              tile.classList.remove("visible");
+            }
+            tile.classList.remove("shadow");
+          });
+          return;
+        }
 
         if (!buttonActive) {
           return;
         }
+
         if (
           e.target.classList.contains("empty") &&
           buttonActive.dataset.id === "wall"
         ) {
           e.target.classList.remove("empty");
+          e.target.classList.remove("visible");
           e.target.classList.add("tile-wall");
 
           tileSelected.wall = true;
-          tileSelected.visible = false;
+
+          if (tileLight) {
+            this.targetGameboard.displayVisibleTiles(tileLight);
+          }
         }
+
         if (
           e.target.classList.contains("empty") &&
           buttonActive.dataset.id === "light"
@@ -239,43 +317,55 @@ class Gameboard {
             tileLight.classList.remove("tile-light");
             tileLight.classList.add("empty");
 
-            this.tilesArray[tileLight.dataset.id].light = false;
+            this.targetGameboard.tilesArray[tileLight.dataset.id].light = false;
           }
 
           e.target.classList.remove("empty");
           e.target.classList.add("tile-light");
+          tileLight = document.querySelector(".tile-light");
 
-          this.tilesArray[e.target.dataset.id].light = true;
-
-          let tilesWall = this.tilesArray.filter((tile)=>{
-              return tile.wall===true;
-          })
-          tilesWall.forEach(tile=>{
-              tile.getVisibleBorderVectors()
-          })
-          
-          console.log(tilesWall);
+          this.targetGameboard.tilesArray[tileLight.dataset.id].light = true;
+          this.targetGameboard.displayVisibleTiles(tileLight);
         }
+      });
+    });
+  }
+
+  addMouseListeners() {
+    const tiles = document.querySelectorAll(".tile");
+
+    tiles.forEach((tile) => {
+      tile.addEventListener("mouseover", (e) => {
+        const buttonActive = document.querySelector(".clicked");
+
+        if (!buttonActive) {
+          return;
+        }
+        if (
+          document.querySelector(".tile-light") &&
+          buttonActive.dataset.id === "light"
+        ) {
+          return;
+        }
+        if (e.target.classList.contains("empty")) {
+          e.target.classList.add(`${buttonActive.dataset.id}-mouse`);
+        }
+      });
+
+      tile.addEventListener("mouseout", (e) => {
+        e.target.classList.remove("wall-mouse");
+        e.target.classList.remove("light-mouse");
       });
     });
   }
 }
 
 const gameboard = new Gameboard(2, 400);
+const controlPanel = new ControlPanel(gameboard);
 
 gameboard.generateTiles();
-gameboard.tilePlayer = gameboard.tilesArray[0];
+
 gameboard.displayTiles();
-gameboard.gameboardAddListeners();
-
-// generateTiles(1, 3);
-// let tilePlayer = tilesArray[0];
-
-// displayTiles();
-// tilesArray.forEach((tile) => {
-//   tile.getOwnCoords();
-//   tile.getVisibleBorderVectors();
-//   tile.decideTileVisible(tilesArray[1]);
-// });
-
-console.log(gameboard.tilesArray);
+controlPanel.displayControls();
+controlPanel.addClickListeners();
+controlPanel.addMouseListeners();
