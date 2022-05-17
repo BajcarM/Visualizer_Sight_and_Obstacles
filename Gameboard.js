@@ -61,23 +61,12 @@ export default class Gameboard {
       wall.getVisibleBorderVectors(this.tilesArray[tileLight.dataset.id]);
 
       const tilesPotentialShadow = this.tilesArray.filter((tile) => {
-        return (
-          tile.distanceSquare(
-            this.tilesArray[tileLight.dataset.id].coordsCenter,
-            tile.coordsCenter
-          ) >
-            tile.distanceSquare(
-              this.tilesArray[tileLight.dataset.id].coordsCenter,
-              wall.coordsCenter
-            ) &&
-          tile.visible === true &&
-          tile.wall === false
-        );
+        return tile.visible === true && tile.wall === false;
       });
 
       tilesPotentialShadow.forEach((tile) => {
         tile.decideTileVisible(this.tilesArray[tileLight.dataset.id], wall);
-        
+
         if (tile.visible === false) {
           const tileShadow = document.querySelector(`[data-id="${tile.id}"]`);
           tileShadow.classList.remove("visible");
